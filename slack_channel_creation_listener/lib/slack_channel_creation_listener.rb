@@ -20,6 +20,12 @@ gd_session = GoogleDrive.saved_session("../google_drive_config.json")
 rt_client.on :channel_created do
   # whenever a channel is created,
   # get all slack channels other than "general" and "random"
+  channels = get_slack_channels
+  # post to google sheets
+  update_google_sheets(channels) unless channels.empty?
+end
+
+def get_slack_channels
   puts 'Getting Slack Channels...'
   # note: If we wanted private channels, we'd use groups_list
   channels = client.channels_list(exclude_archived: true)['channels'] || []
@@ -27,8 +33,10 @@ rt_client.on :channel_created do
   channels.each do |c|
     puts "- id: #{c["id"]}, name: #{c["name"]}"
   end
+  channels
+end
 
-  # post to google sheets
+def update_google_sheets(channels)
   puts 'Updating Google Sheets'
   begin
     ws = gd_session.spreadsheet_by_key(ENV['GOOGLE_DRIVE_SHEET_ID']).worksheets[0]
@@ -40,8 +48,7 @@ rt_client.on :channel_created do
     ws.save
   rescue Exception => e
     $stderr.print "Failed to update Google Sheets\n#{e.inspect}"
-  end
-
+  end  
 end
 
 rt_client.start!
