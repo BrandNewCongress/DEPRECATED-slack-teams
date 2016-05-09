@@ -2,7 +2,7 @@ require 'dotenv'
 require 'slack-ruby-client'
 require 'google_drive'
 
-class SlackChannelCreationListener
+class SlackChannelGoogleSheetsSyncer
   def initialize
     # load environment
     Dotenv.load
@@ -69,5 +69,5 @@ class SlackChannelCreationListener
   end
 end
 
-s = SlackChannelCreationListener.new
+s = SlackChannelGoogleSheetsSyncer.new
 s.start!

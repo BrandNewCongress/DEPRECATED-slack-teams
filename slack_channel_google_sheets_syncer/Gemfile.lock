@@ -140,6 +140,3 @@ DEPENDENCIES
   faye-websocket
   google_drive
   slack-ruby-client
-
-BUNDLED WITH
-   1.12.3
