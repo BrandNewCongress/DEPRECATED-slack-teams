@@ -1,0 +1,12 @@
+<h3>Slack Events</h3>
+<ul>
+<% @events.each do |event| %>
+	<li>
+		<%= event.title %>
+		<a href="<%="#{SLACK_PREFIX}/#{event.title}"%>">Slack Channel</a>
+		<% unless event.spreadsheet_key.nil? %>
+		<a href="https://docs.google.com/spreadsheets/d/<%=event.spreadsheet_key%>">Spreadsheet</a>
+		<% end %>
+	</li>
+<% end %>
+</ul>

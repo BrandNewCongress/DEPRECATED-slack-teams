@@ -34,7 +34,10 @@
 .rvmrc
 
 ## Google Drive config
-google_drive_config.json
+*google_drive_config.json
 
 ## Cloud9
 .swp
+
+## Logging
+*.log
