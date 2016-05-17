@@ -1,9 +1,9 @@
-require 'dotenv'
 require 'slack-ruby-client'
+require 'sinatra/activerecord'
+require './lib/models/event'
 
 class SlackChannelListener
 	def initialize
-		Dotenv.load
 		Slack.configure do |config|
 			config.token = ENV['SLACK_API_TOKEN']
 			fail "Missing ENV['SLACK_API_TOKEN']!" unless config.token
@@ -26,15 +26,7 @@ class SlackChannelListener
 		end
 
 		# kick off loop to update when new channels created
-		Thread.abort_on_exception = true
-  	Thread.new do
-  		begin
-  			@rt_client.start!	
-  		rescue Exception => e
-  			STDERR.puts "ERROR: #{e}"
-				STDERR.puts e.backtrace
-  		end
-  	end
+		@rt_client.start!
 	end
 
 	private
