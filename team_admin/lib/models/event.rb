@@ -7,10 +7,6 @@ class Event < ActiveRecord::Base
 
 	class << self
 
-		def initialize
-			puts "*** self.initialize"
-		end
-
 		def find_or_create_by_title(title)
 			event = Event.find_or_initialize_by(title: title)
 			if event.new_record?

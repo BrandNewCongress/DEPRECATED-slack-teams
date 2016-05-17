@@ -1,14 +1,14 @@
 <div class="container-fluid">
-    <table class="table">
-    	<% @events.each do |event| %>
+  <table class="table">
+  	<% @events.each do |event| %>
     	<tr>
         <td><%= event.title %></td>
         <td><a href="<%="#{SLACK_PREFIX}/#{event.title}"%>">Slack Channel</a></td>
         <% unless event.spreadsheet_key.nil? %>
         <td><a href="https://docs.google.com/spreadsheets/d/<%=event.spreadsheet_key%>">Spreadsheet</a></td>
+        <% end %>
       </tr>
-    	<% end %>
-      <% end %>
-    </dl>
+    <% end %>
+  </dl>
 </div>
 
