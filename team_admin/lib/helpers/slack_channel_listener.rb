@@ -1,6 +1,7 @@
 require 'slack-ruby-client'
 require 'sinatra/activerecord'
 require './lib/models/event'
+require './lib/helpers/form_copy_apps_script_executor'
 
 class SlackChannelListener
 	def initialize
@@ -11,6 +12,7 @@ class SlackChannelListener
 
 		@web_client = Slack::Web::Client.new(user_agent: 'Slack Ruby Client/1.0')
 		@rt_client = Slack::RealTime::Client.new
+		@apps_script_executor = FormCopyAppsScriptExecutor.new
 	end
 
 	def start_listening!
@@ -36,7 +38,13 @@ class SlackChannelListener
 		return if channels.empty?
 		channels.each do |c|
 			# Update db with new events for new channels
-			Event.find_or_create_by_title(c['name'])
+			name = c['name']
+			e = Event.find_or_create_by_title(name)
+			unless e.form_key
+				form_key = @apps_script_executor.copy_form(name, e.spreadsheet_key)
+				e.form_key = form_key
+				e.save!
+			end
 		end
   end
 

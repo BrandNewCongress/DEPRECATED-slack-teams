@@ -7,6 +7,9 @@
         <% unless event.spreadsheet_key.nil? %>
         <td><a href="https://docs.google.com/spreadsheets/d/<%=event.spreadsheet_key%>">Spreadsheet</a></td>
         <% end %>
+        <% unless event.form_key.nil? %>
+        <td><a href="https://docs.google.com/forms/d/<%=event.form_key%>">
+        <% end %>
       </tr>
     <% end %>
   </dl>
