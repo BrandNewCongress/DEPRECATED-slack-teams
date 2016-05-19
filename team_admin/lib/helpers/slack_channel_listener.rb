@@ -40,9 +40,9 @@ class SlackChannelListener
 			# Update db with new events for new channels
 			name = c['name']
 			e = Event.find_or_create_by_title(name)
-			unless e.form_key
+			if e.form_key.nil?
 				form_key = @apps_script_executor.copy_form(name, e.spreadsheet_key)
-				e.form_key = form_key
+				e.form_key = form_key unless form_key.empty?
 				e.save!
 			end
 		end

@@ -6,11 +6,11 @@ gem 'activerecord', '~> 4.2'
 gem 'sinatra-activerecord', '~> 2.0'
 gem 'pg', '~> 0.18.4'
 gem 'slack-ruby-client', '~> 0.7.2'
-gem 'google_drive'
+gem 'google_drive', :git => 'https://github.com/gimite/google-drive-ruby.git', :ref => '032ea8f48fe8bfbe04cf9f53db38784bcc9aec5b'
 gem 'faye-websocket', '~> 0.10.3'
 gem 'dotenv', '~> 2.1.1'
 gem 'puma', '~> 3.4.0'
-gem 'google-api-client', '0.8.2', require: 'google/api_client'
+gem 'google-api-client', '> 0.9'
 
 group :development, :test do
 	gem 'foreman', '~> 0.81'
