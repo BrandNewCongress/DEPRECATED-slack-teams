@@ -10,7 +10,8 @@ CLIENT_SECRETS_PATH = 'google_apps_client_secret.json'
 CREDENTIALS_PATH = File.join(Dir.home, '.credentials',
                              "google-apps-ruby-script-creds.yaml")
 SCOPES = ['https://www.googleapis.com/auth/drive', 
-          'https://www.googleapis.com/auth/forms']
+          'https://www.googleapis.com/auth/forms',
+          'https://www.googleapis.com/auth/urlshortener']
 SCRIPT_ID = 'MwalYU9n-J1q0drjKZnhzFnmS89H2Ajnb'
 
 class FormCopyAppsScriptExecutor
@@ -26,8 +27,8 @@ class FormCopyAppsScriptExecutor
       function: 'copyFormAndUpdateProperties',
       parameters: [
         ENV['ORIGINAL_GOOGLE_FORM_ID'] || '',
-        "#{city.capitalize} BNC Slack Channel Volunteer Survey",
-        "#{city.capitalize} BNC Slack Channel Volunteer Survey",
+        "#{city.capitalize} BNC Tour Volunteer To-Do List",
+        "#{city.capitalize} BNC Tour Volunteer To-Do List",
         spreadsheet_key
       ],
       devMode: false
@@ -56,13 +57,13 @@ class FormCopyAppsScriptExecutor
         end
       else
         # The Apps Script returns the ID of the new form
-        published_form_id = resp.response['result']
-        if published_form_id.empty?
+        short_url = resp.response['result']
+        if short_url.empty?
           puts "No new form ID returned!"
         else
-          puts "New Form ID: #{published_form_id}"
+          puts "New Form ID: #{short_url}"
         end
-        return published_form_id
+        return short_url
       end
     rescue Exception => e
       # The API encountered a problem before the script started executing.

@@ -1,5 +1,8 @@
-require 'slack-ruby-client'
 require 'dotenv'
+require 'slack-ruby-client'
+require 'google_drive'
+require './lib/helpers/form_copy_apps_script_executor'
+
 
 module ConfigureClients
 	def configure_slack
@@ -16,5 +19,10 @@ module ConfigureClients
 	def configure_google_drive
 		session = GoogleDrive.saved_session("../../../../google_drive_config.json")
 		session
+	end
+
+	def configure_apps_script_executor
+		executor = FormCopyAppsScriptExecutor.new
+		executor
 	end
 end

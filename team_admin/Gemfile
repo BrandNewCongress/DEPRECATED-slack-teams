@@ -10,7 +10,7 @@ gem 'google_drive', :git => 'https://github.com/gimite/google-drive-ruby.git', :
 gem 'faye-websocket', '~> 0.10.3'
 gem 'dotenv', '~> 2.1.1'
 gem 'puma', '~> 3.4.0'
-gem 'google-api-client', '> 0.9'
+gem 'google-api-client', :git => 'https://github.com/google/google-api-ruby-client.git', :ref => '253bc51e0bedfe486974386ee3a8ca4836a0eea2'
 
 group :development, :test do
 	gem 'foreman', '~> 0.81'
