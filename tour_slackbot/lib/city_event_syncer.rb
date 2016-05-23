@@ -52,6 +52,7 @@ module CityEventSyncer
         city = sheet[row, EVENTS_TODO_FORM_CITY_INDEX]
         todo_form_url = sheet[row, EVENTS_TODO_FORM_COL_INDEX]
         responses_sheet_key = sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
+        # TODO: This is ugly, clean up + test.
         if todo_form_url.empty? and responses_sheet_key.empty?
           responses_sheet_key = session.create_spreadsheet("#{city} BNC Tour To-Do Responses").key
           todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key)
