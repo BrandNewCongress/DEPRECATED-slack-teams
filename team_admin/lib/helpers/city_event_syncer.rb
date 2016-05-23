@@ -122,7 +122,3 @@ module CityEventSyncer
 		city_name.downcase.gsub(' ', '_').gsub('.', '')
 	end
 end
-
-if __FILE__ == $0
-	puts CityEventSyncer.sync_sheet
-end

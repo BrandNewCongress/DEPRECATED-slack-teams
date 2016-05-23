@@ -1,2 +1,8 @@
 require './lib/app'
 require 'sinatra/activerecord/rake'
+
+# allow requiring of .rb files in 'tasks/lib' and some common libraries
+$LOAD_PATH.unshift File.expand_path('lib/helpers', File.dirname(__FILE__))
+
+# load all rake tasks
+Dir.glob('tasks/*.rake').each { |r| import r }
