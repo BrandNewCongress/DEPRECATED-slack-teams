@@ -3,6 +3,7 @@ require 'slack-ruby-client'
 require 'google_drive'
 require 'utils/configure_clients'
 require 'form_copy_apps_script_executor'
+require 'form_prefilled_url_script_executor'
 
 Dotenv.load
 
@@ -10,8 +11,6 @@ EVENTS_CITIES_SHEET_INDEX = 0
 EVENTS_TODO_FORM_CITY_INDEX = 2
 EVENTS_TODO_FORM_COL_INDEX = 8
 EVENTS_TODO_RESPONSES_COL_INDEX = 9
-
-GOOGLE_SHEET_URL_PREFIX = 'https://docs.google.com/spreadsheets/d/'
 
 module CityEventSyncer
   extend ConfigureClients
@@ -66,13 +65,62 @@ module CityEventSyncer
         else
           puts "#{city} up-to-date with form #{todo_form_url} and responses sheet #{responses_sheet_key} -- nothing to do!"
         end
-        responses_sheet_url = "#{GOOGLE_SHEET_URL_PREFIX}/#{responses_sheet_key}"
         sheet[row, EVENTS_TODO_FORM_COL_INDEX] = todo_form_url
-        sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX] = responses_sheet_url
+        sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX] = responses_sheet_key
         sheet.save
       end
     rescue Exception => e
       puts "Error while updating sheet: #{e}"
+    end
+  end
+
+  # Google Apps Executor
+
+  def self.get_updated_prefilled_url(formId)
+    executor = FormPrefilledUrlScriptExecutor.new
+    begin
+      response = executor.get_prefilled_url_for_latest_responses(formId)
+      short_url = response[0]
+      destination = response[1]
+    rescue Exception => e
+      if short_url.empty? and destination.empty?
+        puts "Error getting updated prefilled url and destination: #{e}"
+      end
+    end
+    return response
+  end
+
+  def self.update_sheet_with_updated_prefilled_url(formId)
+    session = configure_google_drive
+    begin
+      response = get_updated_prefilled_url(formId)
+      short_url = response[0]
+      dest = response[1]
+      if short_url.empty and destination.empty?
+        puts "Error getting updated prefilled url and destination"
+        return
+      end
+      sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
+        .worksheets[EVENTS_CITIES_SHEET_INDEX]
+      matching_idx = -1
+      (2..sheet.num_rows).each_with_index do |row, idx|
+        sheet_dest = sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
+        if sheet_dest == dest
+          matching_idx = idx
+          break
+        end
+      end
+      if matching_idx == -1
+        puts "Could not find a matching index"
+        return
+      end
+      sheet[matching_idx, EVENTS_TODO_FORM_COL_INDEX] = short_url
+      sheet.save
+
+      puts "Updated sheet with new form url: #{short_url}"
+      return short_url
+    rescue Exception => e
+      puts "Error: #{e}"
     end
   end
 
@@ -125,6 +173,8 @@ module CityEventSyncer
     end
     t
   end
+
+  # Util
 
   def self.slack_name_for_city_name(city_name)
     city_name.downcase.gsub(' ', '_').gsub('.', '')

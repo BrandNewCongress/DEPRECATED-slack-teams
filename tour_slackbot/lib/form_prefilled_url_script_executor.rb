@@ -4,18 +4,17 @@ require 'googleauth/stores/file_token_store'
 
 require 'fileutils'
 
-OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
-APPLICATION_NAME = 'BNC Apps Script Form Copy Update '
-CLIENT_SECRETS_PATH = 'google_apps_client_secret.json'
-CREDENTIALS_PATH = File.join(Dir.home, '.credentials',
-                             "google-apps-ruby-script-creds.yaml")
-SCOPES = ['https://www.googleapis.com/auth/drive', 
-          'https://www.googleapis.com/auth/forms',
-          'https://www.googleapis.com/auth/urlshortener']
+class FormPrefilledUrlScriptExecutor
 
-class FormCopyAppsScriptExecutor
+  OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
+  APPLICATION_NAME = 'BNC Apps Script Form Copy Update '
+  CLIENT_SECRETS_PATH = 'google_apps_client_secret.json'
+  CREDENTIALS_PATH = File.join(Dir.home, '.credentials',
+                               "google-apps-ruby-script-creds.yaml")
+  SCOPES = ['https://www.googleapis.com/auth/forms',
+            'https://www.googleapis.com/auth/urlshortener']  
 
-  def copy_form(city, spreadsheet_key)
+  def get_prefilled_url_for_latest_responses(formId)
     # Initialize the API
     service = Google::Apis::ScriptV1::ScriptService.new
     service.client_options.application_name = APPLICATION_NAME
@@ -23,19 +22,14 @@ class FormCopyAppsScriptExecutor
 
     # Create an execution request object.
     request = Google::Apis::ScriptV1::ExecutionRequest.new(
-      function: 'copyFormAndUpdateProperties',
-      parameters: [
-        ENV['ORIGINAL_GOOGLE_FORM_ID'] || '',
-        "#{city.capitalize} BNC Tour Volunteer To-Do List",
-        "#{city.capitalize} BNC Tour Volunteer To-Do List",
-        spreadsheet_key
-      ],
+      function: 'getPrefilledUrlFromLatestResponses',
+      parameters: [formId],
       devMode: false
     )
 
     begin
       # Make the API request.
-      resp = service.run_script(ENV['FORM_COPY_APPS_SCRIPT_ID'], request)
+      resp = service.run_script(ENV['FORM_PREFILLED_URL_SCRIPT_ID'], request)
 
       if resp.error
         # The API executed, but the script returned an error.
@@ -56,17 +50,20 @@ class FormCopyAppsScriptExecutor
         end
       else
         # The Apps Script returns the ID of the new form
-        short_url = resp.response['result']
+        response = resp.response['result']
+        short_url = response['prefilledFormUrl']
+        destination_id = response['destinationId']
         if short_url.empty?
-          puts "No new form ID returned!"
+          puts "No URL returned!"
         else
-          puts "New Form ID: #{short_url}"
+          puts "Prefilled Short URL Returned: #{short_url}\nfor destination #{destination_id}"
         end
-        return short_url
+        return [short_url, destination_id]
       end
     rescue Exception => e
       # The API encountered a problem before the script started executing.
       puts "Error calling API: #{e}"
+      return ['','']
     end
   end
 
