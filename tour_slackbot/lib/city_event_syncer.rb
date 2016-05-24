@@ -34,8 +34,7 @@ module CityEventSyncer
         cities_hash[city] = [todo_form_url, responses_sheet]
       end
     rescue Exception => e
-      puts "Exception: #{e}"
-      puts "#{e.backtrace}"
+      puts "Error while getting cities: #{e}"
     end
 
     cities_hash
@@ -73,8 +72,7 @@ module CityEventSyncer
         sheet.save
       end
     rescue Exception => e
-      puts "Exception: #{e}"
-      puts "#{e.backtrace}"
+      puts "Error while updating sheet: #{e}"
     end
   end
 
@@ -89,7 +87,6 @@ module CityEventSyncer
         client.groups_create(name: n)
       rescue Exception => e
         puts "Error while creating channel for #{n}: #{e}"
-        puts "#{e.backtrace}"
       end
     end
   end
@@ -101,10 +98,10 @@ module CityEventSyncer
       groups = client.groups_list(exclude_archived: true)['groups'] || []
     rescue Exception => e
       puts "Error while getting groups list: #{e}"
-      puts "#{e.backtrace}"
     end
 
-    groups.map { |g| { g.name => g.id } }
+    # groups.map { |g| g.name => g.id }.to_h
+    Hash[groups.map { |g| [g.name, g.id] }]
   end
 
   def self.groups_set_topics(group_id_to_topic_hash)
@@ -115,7 +112,6 @@ module CityEventSyncer
         client.groups_setTopic(channel: gid, topic: t) unless topic == t
       rescue Exception => e
         puts "Error while setting topic: #{e}\nGroup: #{gid}\nTopic: #{t}"
-        puts "#{e.backtrace}"
       end
     end
   end
@@ -126,7 +122,6 @@ module CityEventSyncer
       t = client.groups_info(channel: group_id)['group']['topic']['value']
     rescue Exception => e
       puts "Error while getting group topic: #{e}\nGroup: #{group_id}"
-      puts "#{e.backtrace}"
     end
     t
   end

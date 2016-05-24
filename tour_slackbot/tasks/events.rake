@@ -25,9 +25,16 @@ namespace :events do
 			todo_form_url = value_list[0]
 			slack_groups_hash[slack_group_name] = todo_form_url
 		end
-		puts "Slack Groups Hash: #{slack_groups_hash}"
 
+		CityEventSyncer.create_groups cities_hash.keys
+		group_id_hash = CityEventSyncer.list_groups
+		group_todo_form_hash = {}
+		group_id_hash.each do |group_name, id|
+			todo_form_url = slack_groups_hash[group_name]
+			group_todo_form_hash[id] = "Click here to update your progress: #{todo_form_url}"
+		end
 		# Set Google Form as topic in Slack room if it's not already
+		CityEventSyncer.groups_set_topics group_todo_form_hash
 	end
 
 	desc 'Lists all the cities, forms, and response ids in the Events spreadsheet, in the format { "City Name" => "[FormID, ResponsesID]" }'
