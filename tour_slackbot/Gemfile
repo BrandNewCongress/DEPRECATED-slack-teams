@@ -1,7 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'slack-ruby-bot'
+gem 'slack-ruby-bot', '~> 0.8.0'
 gem 'celluloid-io'
+gem 'eventmachine'
 gem 'puma'
 gem 'sinatra'
 gem 'dotenv', '~> 2.1.1'

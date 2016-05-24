@@ -1,6 +1,6 @@
 require 'sinatra/base'
 
-module SlackGoogleBot
+module TourSlackBot
   class Web < Sinatra::Base
     get '/' do
       'Tour Slackbot running!'
