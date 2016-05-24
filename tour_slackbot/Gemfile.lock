@@ -117,7 +117,10 @@ GEM
       rack (>= 1.2, < 3)
     oj (2.15.0)
     os (0.9.6)
+    puma (3.4.0)
     rack (1.6.4)
+    rack-protection (1.5.3)
+      rack
     rake (11.1.2)
     representable (2.3.0)
       uber (~> 0.0.7)
@@ -140,6 +143,10 @@ GEM
       faraday (~> 0.9)
       jwt (~> 1.5)
       multi_json (~> 1.10)
+    sinatra (1.4.7)
+      rack (~> 1.5)
+      rack-protection (~> 1.4)
+      tilt (>= 1.3, < 3)
     slack-ruby-bot (0.8.0)
       activesupport
       giphy (~> 2.0.2)
@@ -155,6 +162,7 @@ GEM
       websocket-driver
     thor (0.19.1)
     thread_safe (0.3.5)
+    tilt (2.0.4)
     timers (4.1.1)
       hitimes
     tzinfo (1.2.2)
@@ -173,9 +181,10 @@ DEPENDENCIES
   foreman (~> 0.81)
   google-api-client!
   google_drive!
-  minitest (~> 5.7)
+  puma
   rake (~> 11.1.2)
   rspec
+  sinatra
   slack-ruby-bot
 
 BUNDLED WITH
