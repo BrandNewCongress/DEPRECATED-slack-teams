@@ -96,17 +96,17 @@ module CityEventSyncer
       response = get_updated_prefilled_url(formId)
       short_url = response[0]
       dest = response[1]
-      if short_url.empty and destination.empty?
+      if short_url.empty? and destination.empty?
         puts "Error getting updated prefilled url and destination"
         return
       end
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
       matching_idx = -1
-      (2..sheet.num_rows).each_with_index do |row, idx|
+      (2..sheet.num_rows).each do |row|
         sheet_dest = sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
         if sheet_dest == dest
-          matching_idx = idx
+          matching_idx = row
           break
         end
       end

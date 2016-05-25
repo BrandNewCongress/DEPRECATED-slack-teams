@@ -37,6 +37,17 @@ namespace :events do
 		CityEventSyncer.groups_set_topics group_todo_form_hash
 	end
 
+	desc 'Updates the Google Sheet with a new prefilled URL based on the latest responses of a given form'
+	task :update_prefilled_url, :form_id do |t, args|
+		formId = args[:form_id]
+		raise "Can't update prefilled url without formId" if formId.empty?
+		begin
+			CityEventSyncer.update_sheet_with_updated_prefilled_url(formId)
+		rescue Exception => e
+			puts "Error updating sheet with prefilled url: #{e.backtrace}"
+		end
+	end
+
 	desc 'Lists all the cities, forms, and response ids in the Events spreadsheet, in the format { "City Name" => "[FormID, ResponsesID]" }'
 	task :get_cities do
 		CityEventSyncer.get_cities

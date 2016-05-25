@@ -4,7 +4,11 @@ require 'city_event_syncer'
 module TourSlackBot
   class Web < Sinatra::Base
     get '/' do
-      'Tour Slackbot running!'
+      'Service is running!'
+    end
+
+    get '/google7ca26596c1307a24.html' do
+      'google-site-verification: google7ca26596c1307a24.html'
     end
 
     get '/submitFormId' do
@@ -17,6 +21,10 @@ module TourSlackBot
     	end
 
     	"Updated sheet with new url: #{short_url}"
+    end
+
+    get '/google_oauth2/callback' do
+      'callback'
     end
   end
 end

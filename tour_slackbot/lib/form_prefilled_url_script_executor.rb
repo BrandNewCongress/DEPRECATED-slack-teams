@@ -12,7 +12,8 @@ class FormPrefilledUrlScriptExecutor
   CREDENTIALS_PATH = File.join(Dir.home, '.credentials',
                                "google-apps-ruby-script-creds.yaml")
   SCOPES = ['https://www.googleapis.com/auth/forms',
-            'https://www.googleapis.com/auth/urlshortener']  
+            'https://www.googleapis.com/auth/urlshortener',
+            'https://spreadsheets.google.com/feeds']  
 
   def get_prefilled_url_for_latest_responses(formId)
     # Initialize the API
@@ -53,7 +54,7 @@ class FormPrefilledUrlScriptExecutor
         response = resp.response['result']
         short_url = response['prefilledFormUrl']
         destination_id = response['destinationId']
-        if short_url.empty?
+        if not short_url and not destination_id
           puts "No URL returned!"
         else
           puts "Prefilled Short URL Returned: #{short_url}\nfor destination #{destination_id}"
@@ -90,7 +91,7 @@ class FormPrefilledUrlScriptExecutor
       puts "Open the following URL in the browser and enter the " +
            "resulting code after authorization"
       puts url
-      code = gets
+      code = ENV['GOOGLE_API_AUTH_CODE']
       credentials = authorizer.get_and_store_credentials_from_code(
         user_id: user_id, code: code, base_url: OOB_URI)
     end
