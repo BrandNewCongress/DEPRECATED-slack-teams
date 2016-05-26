@@ -16,8 +16,9 @@ module ConfigureClients
     client
   end
 
-  def configure_google_drive(auth)
-    session = GoogleDrive.login_with_oauth(auth.access_token)
+  def configure_google_drive(access_token)
+    puts "*** Access Token: #{access_token}"
+    session = GoogleDrive.login_with_oauth(access_token)
 
     session
   end

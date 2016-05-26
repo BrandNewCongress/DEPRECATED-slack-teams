@@ -6,7 +6,7 @@ require 'fileutils'
 
 OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
 APPLICATION_NAME = 'BNC Apps Script Form Copy Update '
-CLIENT_SECRETS_PATH = 'google_apps_client_secret.json'
+CLIENT_SECRETS_PATH = 'client_secrets.json'
 CREDENTIALS_PATH = File.join(Dir.home, '.credentials',
                              "google-apps-ruby-script-creds.yaml")
 SCOPES = ['https://www.googleapis.com/auth/drive', 

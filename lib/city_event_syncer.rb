@@ -19,9 +19,9 @@ module CityEventSyncer
 
   # Gets a hash of all cities in our Google Spreadsheet
   # Returns a hash in the format { "City Name" => "[FormID, ResponsesID]" }
-  def self.get_cities(auth)
+  def self.get_cities(access_token)
     cities_hash = {}
-    session = configure_google_drive(auth)
+    session = configure_google_drive(access_token)
     begin
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
@@ -40,8 +40,8 @@ module CityEventSyncer
   end
 
   # Create Google Form and Responses Sheet per-city if it doesn't already exist, add to sheet
-  def self.update_sheet(auth)
-    session = configure_google_drive(auth)
+  def self.update_sheet(access_token)
+    session = configure_google_drive(access_token)
     form_copy_executor = configure_apps_script_executor
     begin
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
@@ -76,30 +76,32 @@ module CityEventSyncer
 
   # Google Apps Executor
 
-  def self.get_updated_prefilled_url(formId)
+  def self.get_updated_prefilled_url(formId, access_token)
     executor = FormPrefilledUrlScriptExecutor.new
     begin
-      response = executor.get_prefilled_url_for_latest_responses(formId)
+      response = executor.get_prefilled_url_for_latest_responses(formId, access_token)
+      puts "Got Response: #{response}"
       short_url = response[0]
       destination = response[1]
     rescue Exception => e
-      if short_url.empty? and destination.empty?
+      unless short_url and destination
         puts "Error getting updated prefilled url and destination: #{e}"
       end
     end
     return response
   end
 
-  def self.update_sheet_with_updated_prefilled_url(formId, auth)
-    session = configure_google_drive(auth)
+  def self.update_sheet_with_updated_prefilled_url(formId, access_token)
     begin
-      response = get_updated_prefilled_url(formId)
+      response = get_updated_prefilled_url(formId, access_token)
+      puts "Got Response: #{response}"
       short_url = response[0]
       dest = response[1]
-      if short_url.empty? and destination.empty?
+      unless short_url and dest
         puts "Error getting updated prefilled url and destination"
         return
       end
+      session = configure_google_drive(access_token)
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
       matching_idx = -1

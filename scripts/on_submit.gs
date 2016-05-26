@@ -11,11 +11,11 @@
 function onSubmit(e) {
   var form = FormApp.getActiveForm();
   var formId = form.getId();
-  var properties = PropertiesService.getUserProperties();
+  var properties = PropertiesService.getScriptProperties();
   var endpoint = properties.getProperty('BNCServiceURLEndpoint');
-  var params = {'formId': formId};
-  var response = UrlFetchApp.getRequest(endpoint, params)
-  for(i in response) {
-    Logger.log(i + ": " + response[i]);
-  }
+  var url = endpoint + '?formId=' + formId;
+  Logger.log("Requesting URL: %s", url);
+  var response = UrlFetchApp.fetch(url);
+  var status = response.getResponseCode();
+  Logger.log("Status Code: %s", status);
 }
