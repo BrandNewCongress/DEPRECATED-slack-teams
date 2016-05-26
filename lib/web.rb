@@ -30,7 +30,6 @@ module TourSlackBot
         credentials = JSON.parse(File.open(CREDENTIALS_PATH).read) if File.exists? CREDENTIALS_PATH
         access_token = credentials['access_token']
         raise "Invalid/Missing access_token: #{access_token}" unless access_token and not access_token.empty?
-        puts "Token: #{access_token}"
         short_url = CityEventSyncer.update_sheet_with_updated_prefilled_url(formId, access_token)
       rescue Exception => e
         puts "Error updating sheet: #{e}"
