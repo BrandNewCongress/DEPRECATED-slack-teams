@@ -11,12 +11,14 @@ module TourSlackBot
   class Web < Sinatra::Base
 
     CLIENT_SECRETS_PATH = 'client_secrets.json'
-    CREDENTIALS_PATH = File.join(Dir.home, '.credentials',
-                                 "google-apps-ruby-script-creds.yaml")
+    CREDENTIALS_PATH = File.join('.credentials',
+                                 "google-apps-ruby-script-creds.json")
     SCOPES = ['https://www.googleapis.com/auth/drive',
               'https://spreadsheets.google.com/feeds',
               'https://www.googleapis.com/auth/forms',
               'https://www.googleapis.com/auth/urlshortener']
+
+    FileUtils.mkdir_p(File.dirname(CREDENTIALS_PATH))
 
     get '/' do
       'Service is running!'
@@ -25,8 +27,8 @@ module TourSlackBot
     get '/submitFormId' do
       formId = params['formId']
       begin
-        credentials = session[:credentials]
-        access_token = JSON.parse(credentials)['access_token']
+        credentials = JSON.parse(File.open(CREDENTIALS_PATH).read) if File.exists? CREDENTIALS_PATH
+        access_token = credentials['access_token']
         raise "Invalid/Missing access_token: #{access_token}" unless access_token and not access_token.empty?
         puts "Token: #{access_token}"
         short_url = CityEventSyncer.update_sheet_with_updated_prefilled_url(formId, access_token)
@@ -42,8 +44,8 @@ module TourSlackBot
     # OAuth
 
     get '/authorize' do
-      credentials = session[:credentials]
-      unless session.has_key?(:credentials)
+      credentials = JSON.parse(File.open(CREDENTIALS_PATH).read) if File.exists? CREDENTIALS_PATH
+      if not credentials or not credentials.has_key?('access_token')
         redirect to('/google_oauth2/callback')
         return
       end
@@ -64,7 +66,9 @@ module TourSlackBot
         auth_client.code = request['code']
         auth_client.fetch_access_token!
         auth_client.client_secret = nil
-        session[:credentials] = auth_client.to_json
+        File.open(CREDENTIALS_PATH, 'w') do |f|
+          f.write(auth_client.to_json)
+        end
         redirect to('/authorize')
       end
     end
@@ -74,13 +78,3 @@ module TourSlackBot
     end
   end
 end
-
-
-
-# user_id = 'default'
-# credentials = Google::Auth::UserRefreshCredentials.new(
-#   client_id: ENV['GOOGLE_API_CLIENT_ID'],
-#   client_secret: ENV['GOOGLE_API_CLIENT_SECRET'],
-#   scope: SCOPES,
-#   redirect_uri: "https://bnc-slack-teams.herokuapp.com/google_oauth2/callback")
-# authorizer.fetch_access_token!

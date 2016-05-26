@@ -67,6 +67,7 @@ class FormCopyAppsScriptExecutor
     rescue Exception => e
       # The API encountered a problem before the script started executing.
       puts "Error calling API: #{e}"
+      puts "Error calling API: #{e.backtrace}"
     end
   end
 
