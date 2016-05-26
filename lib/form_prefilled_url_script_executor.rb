@@ -1,7 +1,5 @@
 require 'google/apis/script_v1'
-require 'google/api_client/client_secrets'
 require 'googleauth'
-require 'googleauth/stores/file_token_store'
 
 require 'fileutils'
 

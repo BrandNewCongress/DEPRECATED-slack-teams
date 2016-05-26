@@ -53,14 +53,14 @@ module CityEventSyncer
         # TODO: This is ugly, clean up + test.
         if todo_form_url.empty? and responses_sheet_key.empty?
           responses_sheet_key = session.create_spreadsheet("#{city} BNC Tour To-Do Responses").key
-          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key)
+          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key, access_token)
           puts "Updating #{city}\nForm: #{todo_form_url}\nResponses: #{responses_sheet_key}"
         elsif todo_form_url.empty? and not responses_sheet_key.empty?
-          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key)
+          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key, access_token)
           puts "Updating #{city}\nForm: #{todo_form_url}\nResponses: #{responses_sheet_key}"
         elsif not todo_form_url.empty? and responses_sheet_key.empty?
           responses_sheet_key = session.create_spreadsheet("#{city} BNC Tour To-Do Responses").key
-          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key)
+          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key, access_token)
           puts "Updating #{city}\nForm: #{todo_form_url}\nResponses: #{responses_sheet_key}"
         else
           puts "#{city} up-to-date with form #{todo_form_url} and responses sheet #{responses_sheet_key} -- nothing to do!"

@@ -1,25 +1,21 @@
 require 'google/apis/script_v1'
 require 'googleauth'
-require 'googleauth/stores/file_token_store'
 
 require 'fileutils'
 
-OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
-APPLICATION_NAME = 'BNC Apps Script Form Copy Update '
-CLIENT_SECRETS_PATH = 'client_secrets.json'
-CREDENTIALS_PATH = File.join(Dir.home, '.credentials',
-                             "google-apps-ruby-script-creds.yaml")
 SCOPES = ['https://www.googleapis.com/auth/drive', 
           'https://www.googleapis.com/auth/forms',
           'https://www.googleapis.com/auth/urlshortener']
 
 class FormCopyAppsScriptExecutor
 
-  def copy_form(city, spreadsheet_key)
+  def copy_form(city, spreadsheet_key, access_token)
     # Initialize the API
     service = Google::Apis::ScriptV1::ScriptService.new
-    service.client_options.application_name = APPLICATION_NAME
-    service.authorization = authorize
+    service.authorization = Signet::OAuth2::Client.new(
+      :scope => SCOPES,
+      :access_token => access_token
+    )
 
     # Create an execution request object.
     request = Google::Apis::ScriptV1::ExecutionRequest.new(
@@ -70,35 +66,4 @@ class FormCopyAppsScriptExecutor
       puts "Error calling API: #{e.backtrace}"
     end
   end
-
-  private
-
-  ##
-  # Ensure valid credentials, either by restoring from the saved credentials
-  # files or intitiating an OAuth2 authorization. If authorization is required,
-  # the user's default browser will be launched to approve the request.
-  #
-  # @return [Google::Auth::UserRefreshCredentials] OAuth2 credentials
-  def authorize
-    FileUtils.mkdir_p(File.dirname(CREDENTIALS_PATH))
-
-    client_id = Google::Auth::ClientId.from_file(CLIENT_SECRETS_PATH)
-    token_store = Google::Auth::Stores::FileTokenStore.new(file: CREDENTIALS_PATH)
-    authorizer = Google::Auth::UserAuthorizer.new(
-      client_id, SCOPES, token_store)
-    user_id = 'default'
-    credentials = authorizer.get_credentials(user_id)
-    if credentials.nil?
-      url = authorizer.get_authorization_url(
-        base_url: OOB_URI)
-      puts "Open the following URL in the browser and enter the " +
-           "resulting code after authorization"
-      puts url
-      code = ENV['GOOGLE_API_AUTH_CODE']
-      credentials = authorizer.get_and_store_credentials_from_code(
-        user_id: user_id, code: code, base_url: OOB_URI)
-    end
-    credentials
-  end
-
 end
