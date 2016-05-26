@@ -19,9 +19,9 @@ module CityEventSyncer
 
   # Gets a hash of all cities in our Google Spreadsheet
   # Returns a hash in the format { "City Name" => "[FormID, ResponsesID]" }
-  def self.get_cities
+  def self.get_cities(auth)
     cities_hash = {}
-    session = configure_google_drive
+    session = configure_google_drive(auth)
     begin
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
@@ -40,8 +40,8 @@ module CityEventSyncer
   end
 
   # Create Google Form and Responses Sheet per-city if it doesn't already exist, add to sheet
-  def self.update_sheet
-    session = configure_google_drive
+  def self.update_sheet(auth)
+    session = configure_google_drive(auth)
     form_copy_executor = configure_apps_script_executor
     begin
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
@@ -90,8 +90,8 @@ module CityEventSyncer
     return response
   end
 
-  def self.update_sheet_with_updated_prefilled_url(formId)
-    session = configure_google_drive
+  def self.update_sheet_with_updated_prefilled_url(formId, auth)
+    session = configure_google_drive(auth)
     begin
       response = get_updated_prefilled_url(formId)
       short_url = response[0]

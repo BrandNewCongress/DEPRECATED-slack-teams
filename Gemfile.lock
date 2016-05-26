@@ -138,6 +138,7 @@ DEPENDENCIES
   foreman (~> 0.81)
   google-api-client!
   google_drive!
+  googleauth (~> 0.5.1)
   puma
   rake (~> 11.1.2)
   rspec
