@@ -8,10 +8,8 @@ Dotenv.load
 
 class FormPrefilledUrlScriptExecutor
 
-  SCOPES = ['https://www.googleapis.com/auth/drive',
-              'https://spreadsheets.google.com/feeds',
-              'https://www.googleapis.com/auth/forms',
-              'https://www.googleapis.com/auth/urlshortener']
+  SCOPES = ['https://www.googleapis.com/auth/forms',
+            'https://www.googleapis.com/auth/urlshortener']
 
   def get_prefilled_url_for_latest_responses(formId)
     key = Google::APIClient::KeyUtils.load_from_pkcs12(

@@ -42,8 +42,8 @@ module CityEventSyncer
   # Create Google Form and Responses Sheet per-city if it doesn't already exist, add to sheet
   def self.update_sheet
     session = configure_google_drive
+    form_copy_executor = configure_apps_script_executor
     begin
-      form_copy_executor = configure_apps_script_executor
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
       (2..sheet.num_rows).each do |row|

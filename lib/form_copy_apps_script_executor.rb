@@ -9,9 +9,8 @@ Dotenv.load
 class FormCopyAppsScriptExecutor
 
   SCOPES = ['https://www.googleapis.com/auth/drive',
-              'https://spreadsheets.google.com/feeds',
-              'https://www.googleapis.com/auth/forms',
-              'https://www.googleapis.com/auth/urlshortener'] 
+            'https://www.googleapis.com/auth/forms',
+            'https://www.googleapis.com/auth/urlshortener']
 
   def copy_form(city, spreadsheet_key)
     key = Google::APIClient::KeyUtils.load_from_pkcs12(

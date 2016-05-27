@@ -13,10 +13,14 @@ namespace :events do
 	# This method is idempotent; If nothing to do, it will just be a no-op
 	desc 'Syncs Events sheet, for each city, creates a TODO form and responses sheet if needed, creates a Slack channel if needed, and sets the TODO form as the topic in the Slack channel'
 	task :sync do
-		CityEventSyncer.update_sheet
-		
 		puts "Reading cities from the Events spreadsheet..."
+		CityEventSyncer.update_sheet
 		cities_hash = CityEventSyncer.get_cities
+		if cities_hash and not cities_hash.empty?
+			puts "Found #{cities_hash.keys[0]}..."
+		else
+			puts "Didn't find any cities."
+		end
 		slack_groups_hash = {}
 		cities_hash.each do |city, value_list| # value_list is [FormURL, SheetURL]
 			slack_group_name = CityEventSyncer.slack_name_for_city_name(city)
@@ -25,6 +29,11 @@ namespace :events do
 		end
 		puts "Creating private Slack groups if they don't already exist..."
 		CityEventSyncer.create_groups cities_hash.keys
+		if cities_hash and not cities_hash.empty?
+			puts "Created groups #{cities_hash.keys[0]}..."
+		else
+			puts "No groups to create."
+		end
 		group_id_hash = CityEventSyncer.list_groups
 		group_todo_form_hash = {}
 		group_id_hash.each do |group_name, id|
@@ -33,8 +42,10 @@ namespace :events do
 		end
 		puts "Inviting the bot to the groups..."
 		CityEventSyncer.groups_invite_bot group_id_hash.values
+		puts "Invited #{group_id_hash.values[0]}..." if group_id_hash and not group_id_hash.empty?
 		puts "Setting the Form as topic in Slack room if it's not already..."
 		CityEventSyncer.groups_set_topics group_todo_form_hash
+		puts "Set topic #{group_todo_form_hash.values[0]} in room #{group_todo_form_hash.keys[0]}" if group_todo_form_hash and not group_todo_form_hash.empty?
 	end
 
 	desc 'Updates the Google Sheet with a new prefilled URL based on the latest responses of a given form'
