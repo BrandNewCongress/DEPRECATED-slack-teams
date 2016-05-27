@@ -1,5 +1,8 @@
 require 'city_event_syncer'
 require 'form_copy_apps_script_executor'
+require 'dotenv'
+
+Dotenv.load
 
 namespace :events do
 
@@ -10,7 +13,7 @@ namespace :events do
 	# This method is idempotent; If nothing to do, it will just be a no-op
 	desc 'Syncs Events sheet, for each city, creates a TODO form and responses sheet if needed, creates a Slack channel if needed, and sets the TODO form as the topic in the Slack channel'
 	task :sync do
-		CityEventSyncer.update_sheet
+		CityEventSyncer.update_sheet(ENV['TEMP_ACCESS_TOKEN'])
 
 		# Create private Slack Groups if they don't already exist
 		# group_names = cities_hash.keys.sort!.map do |c|
@@ -18,7 +21,7 @@ namespace :events do
 		# end
 		# puts "Creating Private Slack Groups for:\n#{group_names}"
 		# create_groups(group_names)
-		cities_hash = CityEventSyncer.get_cities
+		cities_hash = CityEventSyncer.get_cities(ENV['TEMP_ACCESS_TOKEN'])
 		slack_groups_hash = {}
 		cities_hash.each do |city, value_list| # value_list is [FormURL, SheetURL]
 			slack_group_name = CityEventSyncer.slack_name_for_city_name(city)
@@ -42,7 +45,7 @@ namespace :events do
 		formId = args[:form_id]
 		raise "Can't update prefilled url without formId" if formId.empty?
 		begin
-			CityEventSyncer.update_sheet_with_updated_prefilled_url(formId)
+			CityEventSyncer.update_sheet_with_updated_prefilled_url(formId, ENV['TEMP_ACCESS_TOKEN'])
 		rescue Exception => e
 			puts "Error updating sheet with prefilled url: #{e.backtrace}"
 		end
@@ -50,7 +53,7 @@ namespace :events do
 
 	desc 'Lists all the cities, forms, and response ids in the Events spreadsheet, in the format { "City Name" => "[FormID, ResponsesID]" }'
 	task :get_cities do
-		CityEventSyncer.get_cities
+		CityEventSyncer.get_cities(ENV['TEMP_ACCESS_TOKEN'])
 	end
 
 	desc 'Lists all the private groups in the Slack team'

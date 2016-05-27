@@ -1,6 +1,7 @@
 require 'sinatra/base'
 require 'sinatra'
 require 'google/apis/drive_v2'
+require 'google/api_client/client_secrets'
 require 'json'
 require "googleauth"
 require 'googleauth/stores/file_token_store'
@@ -29,6 +30,7 @@ module TourSlackBot
       begin
         credentials = JSON.parse(File.open(CREDENTIALS_PATH).read) if File.exists? CREDENTIALS_PATH
         access_token = credentials['access_token']
+        puts "*** access token: #{access_token}"
         raise "Invalid/Missing access_token: #{access_token}" unless access_token and not access_token.empty?
         short_url = CityEventSyncer.update_sheet_with_updated_prefilled_url(formId, access_token)
       rescue Exception => e
@@ -48,6 +50,8 @@ module TourSlackBot
         redirect to('/google_oauth2/callback')
         return
       end
+
+      puts "*** ACCESS TOKEN: #{credentials['access_token']}"
 
       'Authorized!'
     end

@@ -3,11 +3,11 @@ require 'googleauth'
 
 require 'fileutils'
 
-SCOPES = ['https://www.googleapis.com/auth/drive', 
-          'https://www.googleapis.com/auth/forms',
-          'https://www.googleapis.com/auth/urlshortener']
-
 class FormCopyAppsScriptExecutor
+
+  SCOPES = ['https://www.googleapis.com/auth/drive', 
+            'https://www.googleapis.com/auth/forms',
+            'https://www.googleapis.com/auth/urlshortener']  
 
   def copy_form(city, spreadsheet_key, access_token)
     # Initialize the API
