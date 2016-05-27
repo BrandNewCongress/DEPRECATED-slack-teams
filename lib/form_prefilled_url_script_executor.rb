@@ -1,7 +1,10 @@
 require 'google/apis/script_v1'
+require 'google/api_client/auth/key_utils'
 require 'googleauth'
-
 require 'fileutils'
+require 'base64'
+require 'dotenv'
+Dotenv.load
 
 class FormPrefilledUrlScriptExecutor
 
@@ -10,13 +13,20 @@ class FormPrefilledUrlScriptExecutor
               'https://www.googleapis.com/auth/forms',
               'https://www.googleapis.com/auth/urlshortener']
 
-  def get_prefilled_url_for_latest_responses(formId, access_token)
-    # Initialize the API
+  def get_prefilled_url_for_latest_responses(formId)
+    key = Google::APIClient::KeyUtils.load_from_pkcs12(
+      Base64.decode64(ENV['P12B64']), ENV['GOOGLE_SERVICE_ACCT_PASS'])
     service = Google::Apis::ScriptV1::ScriptService.new
     service.authorization = Signet::OAuth2::Client.new(
+      :token_credential_uri => 'https://accounts.google.com/o/oauth2/token',
+      :audience => 'https://accounts.google.com/o/oauth2/token',
       :scope => SCOPES,
-      :access_token => access_token
-    )
+      :issuer => ENV['GOOGLE_SERVICE_ACCOUNT_ISSUER_EMAIL'],
+      :signing_key => key)
+    auth_client = service.authorization.dup
+    auth_client.sub = ENV['GOOGLE_SERVICE_ACCOUNT_USER_EMAIL']
+    auth_client.fetch_access_token!
+    service.authorization = auth_client
 
     # Create an execution request object.
     request = Google::Apis::ScriptV1::ExecutionRequest.new(
@@ -61,7 +71,6 @@ class FormPrefilledUrlScriptExecutor
     rescue Exception => e
       # The API encountered a problem before the script started executing.
       puts "Error calling API: #{e}"
-      puts "Error calling API: #{e.backtrace}"
       return ['','']
     end
   end

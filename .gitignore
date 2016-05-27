@@ -33,10 +33,6 @@
 # unless supporting rvm < 1.11.0 or doing something fancy, ignore this:
 .rvmrc
 
-## Google Configs
-*google_drive_config.json
-*google_apps_client_secret.json
-
 ## Cloud9
 .swp
 

@@ -19,9 +19,9 @@ module CityEventSyncer
 
   # Gets a hash of all cities in our Google Spreadsheet
   # Returns a hash in the format { "City Name" => "[FormID, ResponsesID]" }
-  def self.get_cities(access_token)
+  def self.get_cities
     cities_hash = {}
-    session = configure_google_drive(access_token)
+    session = configure_google_drive
     begin
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
@@ -40,10 +40,10 @@ module CityEventSyncer
   end
 
   # Create Google Form and Responses Sheet per-city if it doesn't already exist, add to sheet
-  def self.update_sheet(access_token)
-    session = configure_google_drive(access_token)
-    form_copy_executor = configure_apps_script_executor
+  def self.update_sheet
+    session = configure_google_drive
     begin
+      form_copy_executor = configure_apps_script_executor
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
       (2..sheet.num_rows).each do |row|
@@ -53,14 +53,14 @@ module CityEventSyncer
         # TODO: This is ugly, clean up + test.
         if todo_form_url.empty? and responses_sheet_key.empty?
           responses_sheet_key = session.create_spreadsheet("#{city} BNC Tour To-Do Responses").key
-          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key, access_token)
+          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key)
           puts "Updating #{city}\nForm: #{todo_form_url}\nResponses: #{responses_sheet_key}"
         elsif todo_form_url.empty? and not responses_sheet_key.empty?
-          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key, access_token)
+          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key)
           puts "Updating #{city}\nForm: #{todo_form_url}\nResponses: #{responses_sheet_key}"
         elsif not todo_form_url.empty? and responses_sheet_key.empty?
           responses_sheet_key = session.create_spreadsheet("#{city} BNC Tour To-Do Responses").key
-          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key, access_token)
+          todo_form_url = form_copy_executor.copy_form(city, responses_sheet_key)
           puts "Updating #{city}\nForm: #{todo_form_url}\nResponses: #{responses_sheet_key}"
         else
           puts "#{city} up-to-date with form #{todo_form_url} and responses sheet #{responses_sheet_key} -- nothing to do!"
@@ -76,11 +76,10 @@ module CityEventSyncer
 
   # Google Apps Executor
 
-  def self.get_updated_prefilled_url(formId, access_token)
+  def self.get_updated_prefilled_url(formId)
     executor = FormPrefilledUrlScriptExecutor.new
+    response = executor.get_prefilled_url_for_latest_responses(formId)
     begin
-      response = executor.get_prefilled_url_for_latest_responses(formId, access_token)
-      puts "Got Response: #{response}"
       short_url = response[0]
       destination = response[1]
     rescue Exception => e
@@ -91,9 +90,9 @@ module CityEventSyncer
     return response
   end
 
-  def self.update_sheet_with_updated_prefilled_url(formId, access_token)
+  def self.update_sheet_with_updated_prefilled_url(formId)
     begin
-      response = get_updated_prefilled_url(formId, access_token)
+      response = get_updated_prefilled_url(formId)
       puts "Got Response: #{response}"
       short_url = response[0]
       dest = response[1]
@@ -101,7 +100,7 @@ module CityEventSyncer
         puts "Error getting updated prefilled url and destination"
         return
       end
-      session = configure_google_drive(access_token)
+      session = configure_google_drive
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
       matching_idx = -1
@@ -122,7 +121,7 @@ module CityEventSyncer
       puts "Updated sheet with new form url: #{short_url}"
       return short_url
     rescue Exception => e
-      puts "Error: #{e}"
+      puts "Error Updating Sheet: #{e}"
     end
   end
 

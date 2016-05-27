@@ -1,5 +1,6 @@
 require 'slack-ruby-client'
-require './lib/utils/configure_clients'
+require 'utils/configure_clients'
+require 'dotenv'
 
 Dotenv.load
 
