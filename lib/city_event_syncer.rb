@@ -175,6 +175,18 @@ module CityEventSyncer
     t
   end
 
+  def self.groups_invite_bot(group_ids)
+    client = configure_slack
+    group_ids.each do |gid|
+      begin
+        client.groups_invite(channel: gid, user: ENV['SLACK_BOT_USER_ID'])
+      rescue Exception => e
+        puts "Error while inviting bot to groups: #{e}\nGroups: #{group_ids}"
+      end
+      group_ids
+    end
+  end
+
   # Util
 
   def self.slack_name_for_city_name(city_name)

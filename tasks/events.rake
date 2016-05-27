@@ -14,8 +14,8 @@ namespace :events do
 	desc 'Syncs Events sheet, for each city, creates a TODO form and responses sheet if needed, creates a Slack channel if needed, and sets the TODO form as the topic in the Slack channel'
 	task :sync do
 		CityEventSyncer.update_sheet
-
-		# Create private Slack Groups if they don't already exist
+		
+		puts "Reading cities from the Events spreadsheet..."
 		cities_hash = CityEventSyncer.get_cities
 		slack_groups_hash = {}
 		cities_hash.each do |city, value_list| # value_list is [FormURL, SheetURL]
@@ -23,7 +23,7 @@ namespace :events do
 			todo_form_url = value_list[0]
 			slack_groups_hash[slack_group_name] = todo_form_url
 		end
-
+		puts "Creating private Slack groups if they don't already exist..."
 		CityEventSyncer.create_groups cities_hash.keys
 		group_id_hash = CityEventSyncer.list_groups
 		group_todo_form_hash = {}
@@ -31,7 +31,9 @@ namespace :events do
 			todo_form_url = slack_groups_hash[group_name]
 			group_todo_form_hash[id] = "Click here to update your progress: #{todo_form_url}"
 		end
-		# Set Google Form as topic in Slack room if it's not already
+		puts "Inviting the bot to the groups..."
+		CityEventSyncer.groups_invite_bot group_id_hash.values
+		puts "Setting the Form as topic in Slack room if it's not already..."
 		CityEventSyncer.groups_set_topics group_todo_form_hash
 	end
 
