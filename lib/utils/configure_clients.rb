@@ -13,7 +13,6 @@ module ConfigureClients
               'https://spreadsheets.google.com/feeds',
               'https://www.googleapis.com/auth/forms',
               'https://www.googleapis.com/auth/urlshortener']
-  P12_PATH = 'AdamBNCTest.p12'
 
   def configure_slack
     Slack.configure do |config|
