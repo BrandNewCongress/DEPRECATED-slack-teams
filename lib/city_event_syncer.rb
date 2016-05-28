@@ -203,9 +203,6 @@ module CityEventSyncer
     group_id_hash = CityEventSyncer.list_groups
     group_id = group_id_hash[slack_name]
 
-    puts "For slack_name #{slack_name}, got group_id: #{group_id}"
-    puts "All groups in hash: #{group_id_hash}"
-
     group_id
   end
 
