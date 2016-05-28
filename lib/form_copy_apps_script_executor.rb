@@ -22,10 +22,7 @@ class FormCopyAppsScriptExecutor
       :scope => SCOPES,
       :issuer => ENV['GOOGLE_SERVICE_ACCOUNT_ISSUER_EMAIL'],
       :signing_key => key)
-    auth_client = service.authorization.dup
-    auth_client.sub = ENV['GOOGLE_SERVICE_ACCOUNT_USER_EMAIL']
-    auth_client.fetch_access_token!
-    service.authorization = auth_client
+    service.authorization.fetch_access_token!
 
     request = Google::Apis::ScriptV1::ExecutionRequest.new(
       function: 'copyFormAndUpdateProperties',
