@@ -38,7 +38,7 @@ namespace :events do
 		group_todo_form_hash = {}
 		group_id_hash.each do |group_name, id|
 			todo_form_url = slack_groups_hash[group_name]
-			group_todo_form_hash[id] = "Click here to update your progress: #{todo_form_url}"
+			group_todo_form_hash[id] = "#{CityEventSyncer::CITY_EVENT_SYNCER_TOPIC_PREFIX} #{todo_form_url}"
 		end
 		puts "Inviting the bot to the groups..."
 		CityEventSyncer.groups_invite_bot group_id_hash.values

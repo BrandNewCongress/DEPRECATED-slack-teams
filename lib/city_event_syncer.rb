@@ -13,6 +13,9 @@ EVENTS_TODO_FORM_COL_INDEX = 15
 EVENTS_TODO_RESPONSES_COL_INDEX = 16
 
 module CityEventSyncer
+
+  CITY_EVENT_SYNCER_TOPIC_PREFIX = "Click here to update your progress:"
+
   extend ConfigureClients
 
   # Google Drive
@@ -104,10 +107,12 @@ module CityEventSyncer
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
       matching_idx = -1
+      city = ''
       (2..sheet.num_rows).each do |row|
         sheet_dest = sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
         if sheet_dest == dest
           matching_idx = row
+          city = sheet[row, EVENTS_TODO_FORM_CITY_INDEX]
           break
         end
       end
@@ -117,6 +122,12 @@ module CityEventSyncer
       end
       sheet[matching_idx, EVENTS_TODO_FORM_COL_INDEX] = short_url
       sheet.save
+
+      # Reset Slack room topic with new URL
+      group_id = slack_group_id_for_city_name(city)
+      topic = "#{CITY_EVENT_SYNCER_TOPIC_PREFIX} #{short_url}"
+      puts "Setting in Slack Group #{group_id} for city #{city}: \"#{topic}\""
+      groups_set_topics({ group_id => topic })
 
       puts "Updated sheet with new form url: #{short_url}"
       return short_url
@@ -185,6 +196,17 @@ module CityEventSyncer
       end
       group_ids
     end
+  end
+
+  def self.slack_group_id_for_city_name(city_name)
+    slack_name = slack_name_for_city_name(city_name)
+    group_id_hash = CityEventSyncer.list_groups
+    group_id = group_id_hash[slack_name]
+
+    puts "For slack_name #{slack_name}, got group_id: #{group_id}"
+    puts "All groups in hash: #{group_id_hash}"
+
+    group_id
   end
 
   # Util
