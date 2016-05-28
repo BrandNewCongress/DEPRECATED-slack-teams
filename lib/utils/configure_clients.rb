@@ -33,10 +33,7 @@ module ConfigureClients
         :scope => SCOPES,
         :issuer => ENV['GOOGLE_SERVICE_ACCOUNT_ISSUER_EMAIL'],
         :signing_key => key)
-      auth_client = client.dup
-      auth_client.sub = 'adamhowardprice@gmail.com'
-      auth_client.fetch_access_token!
-      client = auth_client
+      client.fetch_access_token!
     rescue Exception => e
       puts "Exception: #{e}"
     end
