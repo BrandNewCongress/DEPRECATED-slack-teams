@@ -48,6 +48,11 @@ namespace :events do
 		puts "Set topic #{group_todo_form_hash.values[0]} in room #{group_todo_form_hash.keys[0]}" if group_todo_form_hash and not group_todo_form_hash.empty?
 	end
 
+	desc 'Updates the Google sheet with formIDs and response destinations for each city'
+	task :update_sheet do
+		CityEventSyncer.update_sheet
+	end
+
 	desc 'Updates the Google Sheet with a new prefilled URL based on the latest responses of a given form'
 	task :update_prefilled_url, :form_id do |t, args|
 		formId = args[:form_id]

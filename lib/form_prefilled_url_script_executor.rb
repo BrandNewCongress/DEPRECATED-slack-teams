@@ -1,27 +1,11 @@
 require 'google/apis/script_v1'
-require 'google/api_client/auth/key_utils'
-require 'googleauth'
-require 'fileutils'
-require 'base64'
 require 'dotenv'
 Dotenv.load
 
 class FormPrefilledUrlScriptExecutor
-
-  SCOPES = ['https://www.googleapis.com/auth/forms',
-            'https://www.googleapis.com/auth/urlshortener']
+  attr_accessor :client
 
   def get_prefilled_url_for_latest_responses(formId)
-    key = Google::APIClient::KeyUtils.load_from_pkcs12(
-      Base64.decode64(ENV['P12B64']), ENV['GOOGLE_SERVICE_ACCT_PASS'])
-    service = Google::Apis::ScriptV1::ScriptService.new
-    service.authorization = Signet::OAuth2::Client.new(
-      :token_credential_uri => 'https://accounts.google.com/o/oauth2/token',
-      :audience => 'https://accounts.google.com/o/oauth2/token',
-      :scope => SCOPES,
-      :issuer => ENV['GOOGLE_SERVICE_ACCOUNT_ISSUER_EMAIL'],
-      :signing_key => key)
-    service.authorization.fetch_access_token!
 
     # Create an execution request object.
     request = Google::Apis::ScriptV1::ExecutionRequest.new(
@@ -32,7 +16,7 @@ class FormPrefilledUrlScriptExecutor
 
     begin
       # Make the API request.
-      resp = service.run_script(ENV['FORM_PREFILLED_URL_SCRIPT_ID'], request)
+      resp = client.run_script(ENV['FORM_PREFILLED_URL_SCRIPT_ID'], request)
 
       if resp.error
         # The API executed, but the script returned an error.
