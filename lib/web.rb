@@ -34,5 +34,9 @@ module TourSlackBot
     get '/google7ca26596c1307a24.html' do
       'google-site-verification: google7ca26596c1307a24.html'
     end
+
+    get '/google840911537426b968.html' do
+      'google-site-verification: google840911537426b968.html'
+    end
   end
 end
