@@ -45,7 +45,7 @@ module CityEventSyncer
   # Create Google Form and Responses Sheet per-city if it doesn't already exist, add to sheet
   def self.update_sheet
     session = configure_google_drive
-    form_copy_executor = configure_apps_script_executor
+    form_copy_executor = configure_copy_apps_script_executor
     begin
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
@@ -80,7 +80,7 @@ module CityEventSyncer
   # Google Apps Executor
 
   def self.get_updated_prefilled_url(formId)
-    executor = FormPrefilledUrlScriptExecutor.new
+    executor = configure_prefilled_apps_script_executor
     response = executor.get_prefilled_url_for_latest_responses(formId)
     begin
       short_url = response[0]

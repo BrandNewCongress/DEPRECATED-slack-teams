@@ -13,8 +13,8 @@ Dotenv.load
 module ConfigureClients
 
   SCOPES = ['https://www.googleapis.com/auth/drive',
-              'https://www.googleapis.com/auth/forms',
-              'https://www.googleapis.com/auth/urlshortener']
+            'https://www.googleapis.com/auth/forms',
+            'https://www.googleapis.com/auth/urlshortener']
 
   def configure_slack
     Slack.configure do |config|
@@ -48,8 +48,21 @@ module ConfigureClients
     session
   end
 
-  def configure_apps_script_executor
+  def configure_copy_apps_script_executor
     executor = FormCopyAppsScriptExecutor.new
+
+    configure_apps_script_executor(executor)
+  end
+
+  def configure_prefilled_apps_script_executor
+    executor = FormPrefilledUrlScriptExecutor.new
+
+    configure_apps_script_executor(executor)
+  end
+
+  private
+
+  def configure_apps_script_executor(executor)
     key = Google::APIClient::KeyUtils.load_from_pkcs12(
       Base64.decode64(ENV['P12B64']), ENV['GOOGLE_SERVICE_ACCT_PASS'])
     service = Google::Apis::ScriptV1::ScriptService.new
@@ -66,4 +79,6 @@ module ConfigureClients
     service.authorization.fetch_access_token!
     executor
   end
+
+
 end
