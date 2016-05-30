@@ -209,6 +209,6 @@ module CityEventSyncer
   # Util
 
   def self.slack_name_for_city_name(city_name)
-    city_name.downcase.gsub(' ', '_').gsub('.', '')
+    city_name.downcase.gsub(' ', '-').gsub('.', '_')
   end
 end
