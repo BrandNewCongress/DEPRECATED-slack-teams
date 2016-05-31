@@ -124,10 +124,10 @@ module CityEventSyncer
       sheet.save
 
       # Reset Slack room topic with new URL
-      group_id = slack_group_id_for_city_name(city)
+      channel_id = slack_channel_id_for_city_name(city)
       topic = "#{CITY_EVENT_SYNCER_TOPIC_PREFIX} #{short_url}"
-      puts "Setting in Slack Group #{group_id} for city #{city}: \"#{topic}\""
-      groups_set_topics({ group_id => topic })
+      puts "Setting in Slack Channel #{channel_id} for city #{city}: \"#{topic}\""
+      channels_set_topics({ channel_id => topic })
 
       puts "Updated sheet with new form url: #{short_url}"
       return short_url
@@ -138,72 +138,72 @@ module CityEventSyncer
 
   # Slack
 
-  # Create one private slack group for each city
-  # Returns all private Slack groups names
-  def self.create_groups(group_names)
+  # Create one public slack channel for each city
+  # Returns all public Slack channel names
+  def self.create_channels(channel_names)
     client = configure_slack
-    group_names.each do |n|
+    channel_names.each do |n|
       begin
-        client.groups_create(name: n)
+        client.channels_create(name: n)
       rescue Exception => e
         puts "Error while creating channel for #{n}: #{e}"
       end
     end
   end
 
-  # Returns all groups in the format { "GroupName" => "GroupID"}
-  def self.list_groups
+  # Returns all channels in the format { "ChannelName" => "ChannelID"}
+  def self.list_channels
     client = configure_slack
     begin
-      groups = client.groups_list(exclude_archived: true)['groups'] || []
+      channels = client.channels_list(exclude_archived: true)['channels'] || []
     rescue Exception => e
-      puts "Error while getting groups list: #{e}"
+      puts "Error while getting channels list: #{e}"
     end
 
-    # groups.map { |g| g.name => g.id }.to_h
-    Hash[groups.map { |g| [g.name, g.id] }]
+    # channels.map { |c| c.name => c.id }.to_h
+    Hash[channels.map { |c| [c.name, c.id] }]
   end
 
-  def self.groups_set_topics(group_id_to_topic_hash)
+  def self.channels_set_topics(channel_id_to_topic_hash)
     client = configure_slack
-    group_id_to_topic_hash.each do |gid, t|
+    channel_id_to_topic_hash.each do |id, t|
       begin
-        topic = group_get_topic(gid)
-        client.groups_setTopic(channel: gid, topic: t) unless topic == t
+        topic = channel_get_topic(id)
+        client.channels_setTopic(channel: id, topic: t) unless topic == t
       rescue Exception => e
-        puts "Error while setting topic: #{e}\nGroup: #{gid}\nTopic: #{t}"
+        puts "Error while setting topic: #{e}\nChannel: #{id}\nTopic: #{t}"
       end
     end
   end
 
-  def self.group_get_topic(group_id)
+  def self.channel_get_topic(channel_id)
     client = configure_slack
     begin
-      t = client.groups_info(channel: group_id)['group']['topic']['value']
+      t = client.channels_info(channel: channel_id)['channel']['topic']['value']
     rescue Exception => e
-      puts "Error while getting group topic: #{e}\nGroup: #{group_id}"
+      puts "Error while getting channel topic: #{e}\nChannel: #{channel_id}"
     end
     t
   end
 
-  def self.groups_invite_bot(group_ids)
+  def self.channels_invite_bot(channel_ids)
     client = configure_slack
-    group_ids.each do |gid|
+    channel_ids.each do |id|
       begin
-        client.groups_invite(channel: gid, user: ENV['SLACK_BOT_USER_ID'])
+        client.channels_invite(channel: id, user: ENV['SLACK_BOT_USER_ID'])
       rescue Exception => e
-        puts "Error while inviting bot to groups: #{e}\nGroups: #{group_ids}"
+        puts "Error while inviting bot to channels: #{e}\nChannels: #{channel_ids}"
       end
-      group_ids
+      channel_ids
     end
   end
 
-  def self.slack_group_id_for_city_name(city_name)
+  def self.slack_channel_id_for_city_name(city_name)
     slack_name = slack_name_for_city_name(city_name)
-    group_id_hash = CityEventSyncer.list_groups
-    group_id = group_id_hash[slack_name]
+    channel_id_hash = CityEventSyncer.list_channels
+    channel_id = channel_id_hash[slack_name]
 
-    group_id
+    channel_id
   end
 
   # Util
