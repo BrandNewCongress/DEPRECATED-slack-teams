@@ -17,13 +17,13 @@ namespace :events do
   # This method is idempotent; If nothing to do, it will just be a no-op
   desc 'Syncs Events sheet, for each city, creates a TODO form and responses sheet if needed, creates a Slack channel if needed, and sets the TODO form as the topic in the Slack channel'
   task :sync do
-    puts "Reading cities from the Events spreadsheet..."
-    CityEventSyncer.update_sheet
+    puts "* Reading cities from the Events spreadsheet..."
+    # CityEventSyncer.update_sheet
     cities_hash = CityEventSyncer.get_cities
     if cities_hash and not cities_hash.empty?
-      puts "Found #{cities_hash.keys[0]}..."
+      puts "* Found #{cities_hash.keys}"
     else
-      puts "Didn't find any cities."
+      puts "* Didn't find any cities."
     end
     slack_channels_hash = {}
     cities_hash.each do |city, value_list| # value_list is [FormURL, SheetURL]
@@ -31,25 +31,26 @@ namespace :events do
       todo_form_url = value_list[0]
       slack_channels_hash[slack_channel_name] = todo_form_url
     end
-    puts "Creating public Slack channels if they don't already exist..."
-    CityEventSyncer.create_channels cities_hash.keys
-    if cities_hash and not cities_hash.empty?
-      puts "Created channels #{cities_hash.keys[0]}..."
-    else
-      puts "No channels to create."
-    end
     channel_id_hash = CityEventSyncer.list_channels
+    puts "* Slack Channels that already exist: #{channel_id_hash.keys}"
+    puts "* Creating public Slack channels if they don't already exist..."
+    channels_to_create = cities_hash.keys.reject { |c| channel_id_hash.keys.include? CityEventSyncer.slack_name_for_city_name(c) }
+    puts "* Channels To Create: #{channels_to_create}"
+    CityEventSyncer.create_channels channels_to_create
+    if cities_hash and not cities_hash.empty?
+      puts "* Created channels #{channels_to_create}"
+    else
+      puts "* No channels to create."
+    end
     channel_todo_form_hash = {}
     channel_id_hash.each do |channel_name, id|
       todo_form_url = slack_channels_hash[channel_name]
       channel_todo_form_hash[id] = "#{CityEventSyncer::CITY_EVENT_SYNCER_TOPIC_PREFIX} #{todo_form_url}"
     end
-    puts "Inviting the bot to the channels..."
+    puts "* Inviting the bot to the channels"
     CityEventSyncer.channels_invite_bot channel_id_hash.values
-    puts "Invited #{channel_id_hash.values[0]}..." if channel_id_hash and not channel_id_hash.empty?
-    puts "Setting the Form as topic in Slack room if it's not already..."
+    puts "* Setting the Form as topic in Slack rooms if it's not already set..."
     CityEventSyncer.channels_set_topics channel_todo_form_hash
-    puts "Set topic #{channel_todo_form_hash.values[0]} in room #{channel_todo_form_hash.keys[0]}" if channel_todo_form_hash and not channel_todo_form_hash.empty?
   end
 
   desc 'Updates the Google sheet with formIDs and response destinations for each city'

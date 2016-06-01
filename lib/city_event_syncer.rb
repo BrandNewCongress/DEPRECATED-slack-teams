@@ -192,7 +192,7 @@ module CityEventSyncer
       begin
         client.channels_invite(channel: id, user: ENV['SLACK_BOT_USER_ID'])
       rescue Exception => e
-        puts "Error while inviting bot to channels: #{e}\nChannels: #{channel_ids}"
+        puts "Error while inviting bot to channels: #{e}"
       end
       channel_ids
     end
