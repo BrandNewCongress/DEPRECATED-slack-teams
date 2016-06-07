@@ -86,26 +86,26 @@ namespace :events do
     CityEventSyncer.create_channels names
   end
 
-  desc 'Sets the purpose of each Slack room'
+  desc 'Sets the purpose of each Slack room ("Organizing the event in <City> on <Date>")'
   task :sync_purpose do
     cities_to_date_hash = CityEventSyncer.get_cities_to_dates_hash
     channel_id_hash = CityEventSyncer.list_channels
     
     # Create a hash in the format { <ChannelID> : [<City>, <Date>] }
     channel_id_to_city_date_tuple_hash = {}
-
-    channel_id_hash.each do |chan_name, chan_id|
-      city = CityEventSyncer.city_name_for_slack_name(chan_name)
-      date = cities_to_date_hash[city] || ''
-      channel_id_to_city_date_tuple_hash[chan_id] = [city, date]
+    cities_to_date_hash.each do |city, date|
+      slack_name = CityEventSyncer.slack_name_for_city_name(city)
+      channel_id = channel_id_hash[slack_name]
+      channel_id_to_city_date_tuple_hash[channel_id] = [city, date]
     end
 
     cities_to_purpose_hash = {}
-    channel_id_to_city_date_tuple_hash.each do |chan_id, city_date_tup|
+    channel_id_to_city_date_tuple_hash.each do |channel_id, city_date_tup|
       city = city_date_tup[0]
-      date = city_date_tup[1] # may be null
-      p = CityEventSyncer::CITY_EVENT_SYNCER_PURPOSE_FORMAT_STR % [city, date.empty? ? '' : " on #{date}"]
-      cities_to_purpose_hash[chan_id] = p
+      date = city_date_tup[1]
+      p = CityEventSyncer::CITY_EVENT_SYNCER_PURPOSE_FORMAT_STR\
+          % [city, date.empty? ? '' : " on #{date}"] # in case date is null
+      cities_to_purpose_hash[channel_id] = p
     end
     CityEventSyncer.channels_set_purpose(cities_to_purpose_hash)
   end
