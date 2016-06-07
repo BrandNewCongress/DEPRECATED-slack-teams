@@ -8,6 +8,7 @@ require 'form_prefilled_url_script_executor'
 Dotenv.load
 
 EVENTS_CITIES_SHEET_INDEX = 0
+EVENTS_DATE_COL_INDEX = 1
 EVENTS_TODO_FORM_CITY_INDEX = 2
 EVENTS_TODO_FORM_COL_INDEX = 11
 EVENTS_TODO_RESPONSES_COL_INDEX = 12
@@ -15,6 +16,7 @@ EVENTS_TODO_RESPONSES_COL_INDEX = 12
 module CityEventSyncer
 
   CITY_EVENT_SYNCER_TOPIC_PREFIX = "Click here to update your progress:"
+  CITY_EVENT_SYNCER_PURPOSE_FORMAT_STR = "Organizing the event in %s%s"
 
   extend ConfigureClients
 
@@ -37,6 +39,25 @@ module CityEventSyncer
       end
     rescue Exception => e
       puts "Error while getting cities: #{e}"
+    end
+
+    cities_hash
+  end
+
+  def self.get_cities_to_dates_hash
+    cities_hash = {}
+    session = configure_google_drive
+    begin
+      sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
+        .worksheets[EVENTS_CITIES_SHEET_INDEX]
+      # Get all cities
+      (2..sheet.num_rows).each do |row|
+        city = sheet[row, EVENTS_TODO_FORM_CITY_INDEX]
+        date = sheet[row, EVENTS_DATE_COL_INDEX]
+        cities_hash[city] = date
+      end
+    rescue Exception => e
+      puts "Error while getting cities to date hash: #{e}"
     end
 
     cities_hash
@@ -192,10 +213,22 @@ module CityEventSyncer
       begin
         client.channels_invite(channel: id, user: ENV['SLACK_BOT_USER_ID'])
       rescue Exception => e
-        puts "Error while inviting bot to channels: #{e}"
+        puts "Error while inviting bot to channel #{id}: #{e}"
       end
-      channel_ids
     end
+    channel_ids
+  end
+
+  def self.channels_set_purpose(channel_ids_to_purpose_hash)
+    client = configure_slack
+    channel_ids_to_purpose_hash.each do |id, purpose|
+      begin
+        client.channels_setPurpose(channel: id, purpose: purpose)
+      rescue Exception => e
+        puts "Error while setting purpose in channel #{id}: #{e}"
+      end
+    end
+    channel_ids_to_purpose_hash
   end
 
   def self.slack_channel_id_for_city_name(city_name)
@@ -209,6 +242,16 @@ module CityEventSyncer
   # Util
 
   def self.slack_name_for_city_name(city_name)
-    city_name.downcase.gsub(' ', '-').gsub('.', '_')
+    city_name.downcase
+        .gsub(' ', '-')
+        .gsub('.', '_')
+  end
+
+  def self.city_name_for_slack_name(slack_name)
+    slack_name
+        .gsub('-', ' ')
+        .gsub('_', '.')
+        .split(/ |\_/)
+        .map(&:capitalize).join(" ")
   end
 end
