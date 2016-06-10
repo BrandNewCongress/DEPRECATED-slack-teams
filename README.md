@@ -4,7 +4,7 @@
 
 #### Services
 
-* A slackbot which greets new users when they join the Tour Slack team, asks them which city they are volunteering in, and routes them to the correct private room. Includes Rake tasks to interact with the Events spreadsheet to automatically create Slack channels and create To-Do Forms for each city's Slack channel.
+* Rake tasks to interact with the Events spreadsheet to automatically create Slack channels and create To-Do Forms for each city's Slack channel.
 * A Sinatra service which executes and coordinates several Google Apps Script executables and updates our Events Google Sheets and Slack channel.
 
 #### Google Apps Scripts
