@@ -10,8 +10,8 @@ Dotenv.load
 EVENTS_CITIES_SHEET_INDEX = 0
 EVENTS_DATE_COL_INDEX = 1
 EVENTS_TODO_FORM_CITY_INDEX = 2
-EVENTS_TODO_FORM_COL_INDEX = 11
-EVENTS_TODO_RESPONSES_COL_INDEX = 12
+EVENTS_TODO_FORM_COL_INDEX = 12
+EVENTS_TODO_RESPONSES_COL_INDEX = 13
 
 module CityEventSyncer
 
@@ -30,9 +30,20 @@ module CityEventSyncer
     begin
       sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[EVENTS_CITIES_SHEET_INDEX]
+      # Create list of dupes so we know which ones to append date to
+      cities = []
+      dupes = []
+      (2..sheet.num_rows).each do |row|
+        city = sheet[row, EVENTS_TODO_FORM_CITY_INDEX]
+        dupes.push(city) if cities.include? city
+        cities.push(city)
+      end
       # Get all cities
       (2..sheet.num_rows).each do |row|
         city = sheet[row, EVENTS_TODO_FORM_CITY_INDEX]
+        date = sheet[row, EVENTS_DATE_COL_INDEX]
+        # append date to city if it's a dupe
+        city = "#{city}-#{date.gsub('/','-')}" if dupes.include? city
         todo_form_url = sheet[row, EVENTS_TODO_FORM_COL_INDEX]
         responses_sheet = sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
         cities_hash[city] = [todo_form_url, responses_sheet]
