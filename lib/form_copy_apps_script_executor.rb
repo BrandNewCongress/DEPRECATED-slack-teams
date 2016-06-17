@@ -12,7 +12,6 @@ class FormCopyAppsScriptExecutor
       parameters: [
         ENV['ORIGINAL_GOOGLE_FORM_ID'] || '',
         "#{city.capitalize} BNC Tour Volunteer To-Do List",
-        "#{city.capitalize} BNC Tour Volunteer To-Do List",
         spreadsheet_key
       ],
       devMode: false
