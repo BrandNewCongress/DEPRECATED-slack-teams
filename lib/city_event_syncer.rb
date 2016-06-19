@@ -141,11 +141,13 @@ module CityEventSyncer
         .worksheets[0]
       matching_idx = -1
       city = ''
+      date = ''
       (2..sheet.num_rows).each do |row|
         sheet_dest = sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
         if sheet_dest == dest
           matching_idx = row
           city = sheet[row, EVENTS_CITY_COL_INDEX]
+          date = sheet[row, EVENTS_DATE_COL_INDEX]
           break
         end
       end
@@ -163,6 +165,11 @@ module CityEventSyncer
       channels_set_topics({ channel_id => topic })
 
       puts "Updated sheet with new form url: #{short_url}"
+
+      # Update response sheet with latest response
+      CityEventSyncer.sync_event_response(city, date)
+      puts "Updated All Responses sheet with latest response"
+
       return short_url
     rescue Exception => e
       puts "Error Updating Sheet: #{e}"
@@ -224,6 +231,60 @@ module CityEventSyncer
       
     rescue Exception => e
       puts "Error syncing responses sheet: #{e}"
+    end
+  end
+
+  def self.sync_event_response(event_city, event_date)
+    puts "Syncing latest response for the event in #{event_city} on #{event_date}..."
+
+    begin
+      session = configure_google_drive
+
+      # Get the destination key for the event
+      events_sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
+        .worksheets[0]
+      dest_key = ""
+      (2..events_sheet.num_rows).each do |row|
+        city = events_sheet[row, EVENTS_CITY_COL_INDEX]
+        date = events_sheet[row, EVENTS_DATE_COL_INDEX]
+        if city == event_city and date == event_date
+          dest_key = events_sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
+          break
+        end
+      end
+      if dest_key.empty?
+        puts "Could not find matching event"
+        return
+      end
+
+      # Get the latest responses
+      dest_sheet = session.spreadsheet_by_key(dest_key).worksheets[0]
+      latest_response = [event_date, event_city]
+      if dest_sheet.num_rows > 1
+        (1..dest_sheet.num_cols).each do |col|
+          latest_response.push(dest_sheet[dest_sheet.num_rows, col])
+        end
+      else
+        latest_response = latest_response + Array.new(dest_sheet.num_cols) {""}
+      end
+      
+      puts "Latest Response: #{latest_response}"
+      
+      # Write the response to the All Responses Sheet
+      all_responses_sheet = session.spreadsheet_by_key(ENV['EVENTS_ALL_RESPONSES_SPREADSHEET_ID']).worksheets[0]
+      (2..all_responses_sheet.num_rows).each do |row|
+        city = all_responses_sheet[row, EVENTS_CITY_COL_INDEX]
+        date = all_responses_sheet[row, EVENTS_DATE_COL_INDEX]
+        if city == event_city and date == event_date
+          (1..all_responses_sheet.num_cols).each do |col|
+            all_responses_sheet[row, col] = latest_response[col - 1]
+          end
+        end
+      end
+      all_responses_sheet.save
+      puts "Finished writing responses for event in #{event_city} on #{event_date}"
+    rescue Exception => e
+      puts "Error syncing event response: #{e}"
     end
   end
 
