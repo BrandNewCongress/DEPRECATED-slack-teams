@@ -58,6 +58,11 @@ namespace :events do
     CityEventSyncer.update_sheet
   end
 
+  desc 'Updates the All Responses sheet with the latest response from each sheet'
+  task :sync_all_responses_sheet do
+    CityEventSyncer.sync_all_responses_sheet
+  end
+
   desc 'Updates the Google Sheet with a new prefilled URL based on the latest responses of a given form'
   task :update_prefilled_url, :form_id do |t, args|
     formId = args[:form_id]
