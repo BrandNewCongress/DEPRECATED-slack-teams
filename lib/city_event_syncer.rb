@@ -10,6 +10,10 @@ Dotenv.load
 EVENTS_DATE_COL_INDEX = 1
 EVENTS_CITY_COL_INDEX = 2
 EVENTS_STATE_COL_INDEX = 3
+EVENTS_ZIP_COL_INDEX = 4
+EVENTS_NB_COL_INDEX = 5
+EVENTS_FB_COL_INDEX = 10
+
 EVENTS_TODO_FORM_URL_COL_INDEX = 12
 EVENTS_TODO_RESPONSES_COL_INDEX = 13
 
@@ -186,19 +190,28 @@ module CityEventSyncer
       event_key_to_dest_key_hash = {}
       events_sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
           .worksheets[0]
-      delimiter = '---'
+      delimiter = "\n"
       (2..events_sheet.num_rows).each do |row|
         date = events_sheet[row, EVENTS_DATE_COL_INDEX]
         city = events_sheet[row, EVENTS_CITY_COL_INDEX]
         state = events_sheet[row, EVENTS_STATE_COL_INDEX]
-        city_date_key = "#{date}#{delimiter}#{city}#{delimiter}#{state}"
+        zip = events_sheet[row, EVENTS_ZIP_COL_INDEX]
+        nb = events_sheet[row, EVENTS_NB_COL_INDEX]
+        fb = events_sheet[row, EVENTS_FB_COL_INDEX]
+        info_key =
+"""#{date}
+#{city}
+#{state}
+#{zip}
+#{nb}
+#{fb}"""
         dest_sheet_key = events_sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
-        event_key_to_dest_key_hash[city_date_key] = dest_sheet_key
+        event_key_to_dest_key_hash[info_key] = dest_sheet_key
       end
       # Accumulate the final response from all event responses sheets
       sorted_events = event_key_to_dest_key_hash.keys.sort_by do |k|
         # Sort events by date (in seconds)
-        dt = DateTime.strptime(k.split(delimiter)[1], '%m/%d/%Y')
+        dt = DateTime.strptime(k.split(delimiter)[0], '%m/%d/%Y')
         dt.strftime('%s')
       end
       responses = []
@@ -206,15 +219,19 @@ module CityEventSyncer
         dest_key = event_key_to_dest_key_hash[e]
         puts "Fetching Destination Sheet for city #{e}..."
         dest_sheet = session.spreadsheet_by_key(dest_key).worksheets[0]
-        date = e.split(delimiter)[0]
-        city = e.split(delimiter)[1]
-        state = e.split(delimiter)[2]
-        resp = [date, city, state]
+        split_info = e.split(delimiter)
+        date = split_info[0]
+        city = split_info[1]
+        state = split_info[2]
+        zip = split_info[3]
+        nb = split_info[4]
+        fb = split_info[5]
+        resp = [date, city, state, zip, nb, fb]
         if dest_sheet.num_rows <= 1
           # Fill array with empty strings, prepended by event key
           resp = resp + Array.new(dest_sheet.num_cols) {""}
         else
-          (1..dest_sheet.num_cols).each do |col|
+          (2..dest_sheet.num_cols).each do |col|
             resp.push(dest_sheet[dest_sheet.num_rows, col])
           end
         end
@@ -247,11 +264,14 @@ module CityEventSyncer
       events_sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[0]
       dest_key = ""
-      event_state = ""
+      city, date, state, zip, nb, fb = ['','','','','','','']
       (2..events_sheet.num_rows).each do |row|
         city = events_sheet[row, EVENTS_CITY_COL_INDEX]
         date = events_sheet[row, EVENTS_DATE_COL_INDEX]
         state = events_sheet[row, EVENTS_STATE_COL_INDEX]
+        zip = events_sheet[row, EVENTS_ZIP_COL_INDEX]
+        nb = events_sheet[row, EVENTS_NB_COL_INDEX]
+        fb = events_sheet[row, EVENTS_FB_COL_INDEX]
         if city == event_city and date == event_date
           dest_key = events_sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
           break
@@ -264,9 +284,9 @@ module CityEventSyncer
 
       # Get the latest responses
       dest_sheet = session.spreadsheet_by_key(dest_key).worksheets[0]
-      latest_response = [event_date, event_city, event_state]
+      latest_response = [date, city, state, zip, nb, fb]
       if dest_sheet.num_rows > 1
-        (1..dest_sheet.num_cols).each do |col|
+        (2..dest_sheet.num_cols).each do |col|
           latest_response.push(dest_sheet[dest_sheet.num_rows, col])
         end
       else
@@ -278,10 +298,10 @@ module CityEventSyncer
       # Write the response to the All Responses Sheet
       all_responses_sheet = session.spreadsheet_by_key(ENV['EVENTS_ALL_RESPONSES_SPREADSHEET_ID']).worksheets[0]
       (2..all_responses_sheet.num_rows).each do |row|
-        city = all_responses_sheet[row, EVENTS_CITY_COL_INDEX]
-        date = all_responses_sheet[row, EVENTS_DATE_COL_INDEX]
-        state = all_responses_sheet[row, EVENTS_STATE_COL_INDEX]
-        if city == event_city and date == event_date
+        resp_city = all_responses_sheet[row, EVENTS_CITY_COL_INDEX]
+        resp_date = all_responses_sheet[row, EVENTS_DATE_COL_INDEX]
+        resp_state = all_responses_sheet[row, EVENTS_STATE_COL_INDEX]
+        if resp_city == event_city and resp_date == event_date
           (1..all_responses_sheet.num_cols).each do |col|
             all_responses_sheet[row, col] = latest_response[col - 1]
           end
