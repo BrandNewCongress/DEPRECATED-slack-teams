@@ -49,7 +49,8 @@ module CityEventSyncer
         city = sheet[row, EVENTS_CITY_COL_INDEX]
         date = sheet[row, EVENTS_DATE_COL_INDEX]
         # append date to city if it's a dupe
-        city = "#{city}-#{date.gsub('/','-')}" if dupes.include? city
+        # also remove 2016, too many chars
+        city = "#{city}-#{date.gsub('/2016','').gsub('/','-')}" if dupes.include? city
         todo_form_url = sheet[row, EVENTS_TODO_FORM_URL_COL_INDEX]
         responses_sheet = sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
         cities_hash[city] = [todo_form_url, responses_sheet]
@@ -198,15 +199,18 @@ module CityEventSyncer
         zip = events_sheet[row, EVENTS_ZIP_COL_INDEX]
         nb = events_sheet[row, EVENTS_NB_COL_INDEX]
         fb = events_sheet[row, EVENTS_FB_COL_INDEX]
+        todo_form = events_sheet[row, EVENTS_TODO_FORM_URL_COL_INDEX]
+        todo_resp = events_sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
         info_key =
 """#{date}
 #{city}
 #{state}
 #{zip}
 #{nb}
-#{fb}"""
-        dest_sheet_key = events_sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
-        event_key_to_dest_key_hash[info_key] = dest_sheet_key
+#{fb}
+#{todo_form}
+#{todo_resp}"""
+        event_key_to_dest_key_hash[info_key] = todo_resp
       end
       # Accumulate the final response from all event responses sheets
       sorted_events = event_key_to_dest_key_hash.keys.sort_by do |k|
@@ -216,9 +220,17 @@ module CityEventSyncer
       end
       responses = []
       sorted_events.each do |e|
-        dest_key = event_key_to_dest_key_hash[e]
+        dest_key = event_key_to_dest_key_hash[e] || ''
         puts "Fetching Destination Sheet for city #{e}..."
-        dest_sheet = session.spreadsheet_by_key(dest_key).worksheets[0]
+        if dest_key.empty?
+          num_cols = 0
+        else
+          dest_sheet = session
+            .spreadsheet_by_key(dest_key)
+            .worksheets[0]
+          num_cols = dest_sheet.num_cols
+        end
+        
         split_info = e.split(delimiter)
         date = split_info[0]
         city = split_info[1]
@@ -226,12 +238,14 @@ module CityEventSyncer
         zip = split_info[3]
         nb = split_info[4]
         fb = split_info[5]
-        resp = [date, city, state, zip, nb, fb]
-        if dest_sheet.num_rows <= 1
+        todo_form = split_info[6]
+        todo_resp = split_info[7]
+        resp = [date, city, state, zip, nb, fb, todo_form, todo_resp]
+        if dest_key.empty? or dest_sheet.num_rows <= 1
           # Fill array with empty strings, prepended by event key
-          resp = resp + Array.new(dest_sheet.num_cols) {""}
+          resp = resp + Array.new(num_cols) {""}
         else
-          (2..dest_sheet.num_cols).each do |col|
+          (2..num_cols).each do |col|
             resp.push(dest_sheet[dest_sheet.num_rows, col])
           end
         end
@@ -264,7 +278,7 @@ module CityEventSyncer
       events_sheet = session.spreadsheet_by_key(ENV['EVENTS_SPREADSHEET_ID'])
         .worksheets[0]
       dest_key = ""
-      city, date, state, zip, nb, fb = ['','','','','','','']
+      city, date, state, zip, nb, fb, todo_form, dest_key = ['','','','','','','','','']
       (2..events_sheet.num_rows).each do |row|
         city = events_sheet[row, EVENTS_CITY_COL_INDEX]
         date = events_sheet[row, EVENTS_DATE_COL_INDEX]
@@ -272,6 +286,7 @@ module CityEventSyncer
         zip = events_sheet[row, EVENTS_ZIP_COL_INDEX]
         nb = events_sheet[row, EVENTS_NB_COL_INDEX]
         fb = events_sheet[row, EVENTS_FB_COL_INDEX]
+        todo_form = events_sheet[row, EVENTS_TODO_FORM_URL_COL_INDEX]
         if city == event_city and date == event_date
           dest_key = events_sheet[row, EVENTS_TODO_RESPONSES_COL_INDEX]
           break
@@ -284,7 +299,7 @@ module CityEventSyncer
 
       # Get the latest responses
       dest_sheet = session.spreadsheet_by_key(dest_key).worksheets[0]
-      latest_response = [date, city, state, zip, nb, fb]
+      latest_response = [date, city, state, zip, nb, fb, todo_form, dest_key]
       if dest_sheet.num_rows > 1
         (2..dest_sheet.num_cols).each do |col|
           latest_response.push(dest_sheet[dest_sheet.num_rows, col])
@@ -300,7 +315,6 @@ module CityEventSyncer
       (2..all_responses_sheet.num_rows).each do |row|
         resp_city = all_responses_sheet[row, EVENTS_CITY_COL_INDEX]
         resp_date = all_responses_sheet[row, EVENTS_DATE_COL_INDEX]
-        resp_state = all_responses_sheet[row, EVENTS_STATE_COL_INDEX]
         if resp_city == event_city and resp_date == event_date
           (1..all_responses_sheet.num_cols).each do |col|
             all_responses_sheet[row, col] = latest_response[col - 1]
@@ -345,6 +359,7 @@ module CityEventSyncer
   end
 
   def self.channels_set_topics(channel_id_to_topic_hash)
+    puts "Setting topics for hash:\n#{channel_id_to_topic_hash}"
     client = configure_slack
     channel_id_to_topic_hash.each do |id, t|
       begin

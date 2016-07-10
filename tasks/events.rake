@@ -18,7 +18,7 @@ namespace :events do
   desc 'Syncs Events sheet, for each city, creates a TODO form and responses sheet if needed, creates a Slack channel if needed, and sets the TODO form as the topic in the Slack channel'
   task :sync do
     puts "* Reading cities from the Events spreadsheet..."
-    # CityEventSyncer.update_sheet
+    #CityEventSyncer.update_sheet
     cities_hash = CityEventSyncer.get_cities
     if cities_hash and not cities_hash.empty?
       puts "* Found #{cities_hash.keys}"
