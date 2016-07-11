@@ -14,7 +14,8 @@ EVENTS_ZIP_COL_INDEX = 4
 EVENTS_NB_COL_INDEX = 5
 EVENTS_FB_COL_INDEX = 6
 EVENTS_TODO_FORM_URL_COL_INDEX = 7
-EVENTS_TODO_RESPONSES_COL_INDEX = 8
+EVENTS_TODO_FORM_ID_COL_INDEX = 8
+EVENTS_TODO_RESPONSES_COL_INDEX = 9
 
 module CityEventSyncer
 
@@ -88,7 +89,7 @@ module CityEventSyncer
         .worksheets[0]
       # Get all formIDs
       (2..sheet.num_rows).each do |row|
-        forms.push(sheet[row, EVENTS_TODO_FORM_URL_COL_INDEX])
+        forms.push(sheet[row, EVENTS_TODO_FORM_ID_COL_INDEX])
       end
     rescue Exception => e
       puts "Error getting form IDs"
