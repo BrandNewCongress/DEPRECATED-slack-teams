@@ -122,6 +122,24 @@ namespace :events do
     CityEventSyncer.channels_set_purpose(cities_to_purpose_hash)
   end
 
+  # Adding Questions To Form
+  ################################################################
+
+  desc 'Adds questions to form'
+  task :add_questions_to_form, :form_id do |t, args|
+    form_id = args[:form_id]
+    raise "Invalid Form ID" if form_id.to_s.empty?
+    CityEventSyncer.add_questions_to_form(form_id)
+  end
+
+  desc 'Adds questions to all forms'
+  task :add_questions_to_all_forms do
+    forms = CityEventSyncer.get_all_form_ids
+    forms.each do |f|
+      CityEventSyncer.add_questions_to_form(f)
+    end
+  end
+
   # Archiving
   ################################################################
 

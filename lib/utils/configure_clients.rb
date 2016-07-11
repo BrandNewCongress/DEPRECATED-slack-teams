@@ -7,6 +7,7 @@ require 'fileutils'
 require 'base64'
 require 'dotenv'
 require 'form_copy_apps_script_executor'
+require 'form_add_questions_script_executor'
 
 Dotenv.load
 
@@ -56,6 +57,12 @@ module ConfigureClients
 
   def configure_prefilled_apps_script_executor
     executor = FormPrefilledUrlScriptExecutor.new
+
+    configure_apps_script_executor(executor)
+  end
+
+  def configure_add_questions_script_executor
+    executor = FormAddQuestionsScriptExecutor.new
 
     configure_apps_script_executor(executor)
   end

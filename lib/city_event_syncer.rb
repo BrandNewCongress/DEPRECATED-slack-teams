@@ -80,6 +80,22 @@ module CityEventSyncer
     cities_hash
   end
 
+  def self.get_all_form_ids
+    forms = []
+    session = configure_google_drive
+    begin
+      sheet = session.spreadsheet_by_key(ENV['EVENTS_ALL_RESPONSES_SPREADSHEET_ID'])
+        .worksheets[0]
+      # Get all formIDs
+      (2..sheet.num_rows).each do |row|
+        forms.push(sheet[row, EVENTS_TODO_FORM_URL_COL_INDEX])
+      end
+    rescue Exception => e
+      puts "Error getting form IDs"
+    end
+    forms
+  end
+
   # Create Google Form and Responses Sheet per-city if it doesn't already exist, add to sheet
   def self.update_sheet
     session = configure_google_drive
@@ -119,8 +135,8 @@ module CityEventSyncer
 
   def self.get_updated_prefilled_url(formId)
     executor = configure_prefilled_apps_script_executor
-    response = executor.get_prefilled_url_for_latest_responses(formId)
     begin
+      response = executor.get_prefilled_url_for_latest_responses(formId)
       short_url = response[0]
       destination = response[1]
     rescue Exception => e
@@ -129,6 +145,19 @@ module CityEventSyncer
       end
     end
     return response
+  end
+
+  # Google Apps Executor: Form Copy Apps Script
+
+  def self.add_questions_to_form(formId)
+    executor = configure_add_questions_script_executor
+    success = false
+    begin
+      success = executor.add_questions_to_form(formId)
+    rescue Exception => e
+      puts "Error adding questions to form #{formId}: #{e}" unless success
+    end
+    return success
   end
 
   def self.update_sheet_with_updated_prefilled_url(formId)
